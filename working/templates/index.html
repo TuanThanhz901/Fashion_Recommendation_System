@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Recommendation System</title>
+    <!-- Icon túi xách -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👜</text></svg>">
+    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f2f5;
+            min-height: 94vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            height: calc(94vh - 40px); /* 40px là tổng padding của body */
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        .header h1 {
+            color: #1a73e8;
+            margin: 0;
+            font-size: 2.5em;
+        }
+
+        .content-container {
+            display: grid;
+            grid-template-columns: 400px 1fr; /* Fixed width for left panel */
+            gap: 30px;
+            flex: 1;
+            min-height: 0; /* Quan trọng cho scroll */
+        }
+
+        .left-panel, .right-panel {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: auto;
+        }
+
+        .section-title {
+            color: #1a73e8;
+            margin-bottom: 20px;
+            font-size: 1.2em;
+            font-weight: 600;
+        }
+
+        .upload-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .drop-zone {
+            border: 2px dashed #1a73e8;
+            border-radius: 8px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f8fbff;
+        }
+
+        .drop-zone:hover, .drop-zone.dragover {
+            background-color: #e8f0fe;
+            border-color: #0d47a1;
+        }
+
+        .drop-zone i {
+            font-size: 40px;
+            color: #1a73e8;
+            margin-bottom: 10px;
+        }
+
+        .k-input {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-size: 16px;
+            text-align: center;
+        }
+
+        .submit-btn {
+            background: #1a73e8;
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .submit-btn:hover {
+            background: #1557b0;
+        }
+
+        .submit-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .processing-status {
+            display: none;
+            padding: 20px;
+            border-radius: 8px;
+            background: #f8f9fa;
+            margin: 20px 0;
+        }
+
+        .upload-progress {
+            background: #e8f0fe;
+            height: 6px;
+            border-radius: 3px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+
+        .upload-progress-bar {
+            height: 100%;
+            background: #1a73e8;
+            width: 0;
+            transition: width 0.3s ease;
+        }
+
+        .status-steps {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .status-step {
+            display: flex;
+            align-items: center;
+            margin: 12px 0;
+            opacity: 0.5;
+            transition: opacity 0.3s;
+            font-size: 14px;
+        }
+
+        .status-step.active {
+            opacity: 1;
+        }
+
+        .status-step i {
+            margin-right: 12px;
+            color: #1a73e8;
+            width: 20px;
+            text-align: center;
+        }
+
+        .query-image {
+            width: 100%;
+            max-height: 300px;
+            object-fit: contain;
+            border-radius: 8px;
+            margin: 15px 0;
+            background: #f8f9fa;
+        }
+
+        .swiper {
+            width: 100%;
+            height: 100%;
+            padding: 20px 0;
+        }
+
+        .swiper-slide {
+            background: #fff;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            height: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .recommendation-image {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .recommendation-info {
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .recommendation-info p {
+            margin: 0;
+            color: #1a73e8;
+            font-weight: 500;
+        }
+
+        .placeholder-card {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .swiper-button-next,
+        .swiper-button-prev {
+            color: #1a73e8;
+        }
+
+        .swiper-pagination-bullet-active {
+            background: #1a73e8;
+        }
+
+        @media (max-width: 1024px) {
+            .content-container {
+                grid-template-columns: 350px 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .content-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                height: auto;
+            }
+            
+            .left-panel, .right-panel {
+                max-height: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Image Recommendation System</h1>
+        </div>
+
+        <div class="content-container">
+            <div class="left-panel">
+                <h2 class="section-title">Upload Image</h2>
+                
+                <form id="uploadForm" class="upload-form">
+                    <div class="drop-zone" id="dropZone">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <p>Drag and drop an image or click to select</p>
+                        <input type="file" id="fileInput" name="file" accept=".jpg,.jpeg,.png" style="display: none;">
+                    </div>
+
+                    <input type="number" name="k" class="k-input" min="1" max="20" value="5" placeholder="Number of recommendations">
+                    
+                    <button type="submit" class="submit-btn">Get Recommendations</button>
+                </form>
+
+                <div class="processing-status" id="processingStatus">
+                    <div class="upload-progress">
+                        <div class="upload-progress-bar" id="uploadProgressBar"></div>
+                    </div>
+
+                    <ul class="status-steps">
+                        <li class="status-step" id="uploadStep">
+                            <i class="fas fa-upload"></i>
+                            <span>Uploading image...</span>
+                        </li>
+                        <li class="status-step" id="processStep">
+                            <i class="fas fa-cogs"></i>
+                            <span>Processing with AI model...</span>
+                        </li>
+                        <li class="status-step" id="completeStep">
+                            <i class="fas fa-check-circle"></i>
+                            <span>Generating recommendations...</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <img id="queryImage" class="query-image" style="display: none;">
+            </div>
+
+            <div class="right-panel">
+                <h2 class="section-title">Recommendations</h2>
+                
+                <div class="swiper">
+                    <div class="swiper-wrapper" id="results">
+                        <!-- Placeholder cards -->
+                        <div class="swiper-slide">
+                            <div class="placeholder-card">
+                                <span>Upload an image to see recommendations</span>
+                            </div>
+                        </div>
+                        <div class="swiper-slide">
+                            <div class="placeholder-card">
+                                <span>Recommendation will appear here</span>
+                            </div>
+                        </div>
+                        <div class="swiper-slide">
+                            <div class="placeholder-card">
+                                <span>Recommendation will appear here</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="swiper-pagination"></div>
+                    <div class="swiper-button-next"></div>
+                    <div class="swiper-button-prev"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+    <script>
+        let swiper = new Swiper('.swiper', {
+            slidesPerView: 3,
+            spaceBetween: 30,
+            loop: true, // Tắt loop để tránh duplicate slides
+            pagination: {
+                el: '.swiper-pagination',
+                clickable: true,
+            },
+            navigation: {
+                nextEl: '.swiper-button-next',
+                prevEl: '.swiper-button-prev',
+            },
+            breakpoints: {
+                320: {
+                    slidesPerView: 1,
+                    spaceBetween: 10
+                },
+                768: {
+                    slidesPerView: 2,
+                    spaceBetween: 20
+                },
+                1024: {
+                    slidesPerView: 3,
+                    spaceBetween: 30
+                }
+            }
+        });
+
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const queryImage = document.getElementById('queryImage');
+        const processingStatus = document.getElementById('processingStatus');
+        const uploadProgressBar = document.getElementById('uploadProgressBar');
+        const uploadStep = document.getElementById('uploadStep');
+        const processStep = document.getElementById('processStep');
+        const completeStep = document.getElementById('completeStep');
+        const resultsWrapper = document.querySelector('.swiper-wrapper');
+        const submitBtn = document.querySelector('.submit-btn');
+
+        function updateProcessingStatus(step, progress = null) {
+            processingStatus.style.display = 'block';
+            [uploadStep, processStep, completeStep].forEach(s => s.classList.remove('active'));
+
+            switch(step) {
+                case 'upload':
+                    uploadStep.classList.add('active');
+                    if (progress !== null) {
+                        uploadProgressBar.style.width = `${progress}%`;
+                    }
+                    break;
+                case 'process':
+                    uploadStep.classList.add('active');
+                    processStep.classList.add('active');
+                    uploadProgressBar.style.width = '100%';
+                    break;
+                case 'complete':
+                    uploadStep.classList.add('active');
+                    processStep.classList.add('active');
+                    completeStep.classList.add('active');
+                    setTimeout(() => {
+                        processingStatus.style.display = 'none';
+                        submitBtn.disabled = false;
+                    }, 2000);
+                    break;
+            }
+        }
+
+        // Thêm hiệu ứng khi kéo thả
+        dropZone.addEventListener('dragenter', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length) handleFile(files[0]);
+        });
+
+        dropZone.addEventListener('click', () => fileInput.click());
+        
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length) handleFile(e.target.files[0]);
+        });
+
+        document.getElementById('uploadForm').onsubmit = async (e) => {
+            e.preventDefault();
+            submitBtn.disabled = true;
+            
+            const formData = new FormData(e.target);
+            if (!formData.get('file')) {
+                alert('Please select an image first');
+                submitBtn.disabled = false;
+                return;
+            }
+
+            updateProcessingStatus('upload', 0);
+
+            try {
+                const xhr = new XMLHttpRequest();
+                
+                xhr.upload.onprogress = (e) => {
+                    if (e.lengthComputable) {
+                        const percent = Math.round((e.loaded / e.total) * 100);
+                        updateProcessingStatus('upload', percent);
+                    }
+                };
+
+                xhr.onload = function() {
+                    if (xhr.status === 200) {
+                        updateProcessingStatus('process');
+                        setTimeout(() => {
+                            const data = JSON.parse(xhr.responseText);
+                            
+                            let html = '';
+                            data.recommendations.forEach((rec , index) => {
+                                html += `
+                                    <div class="swiper-slide">
+                                        <img src="${rec.path}" alt="${rec.filename}" class="recommendation-image">
+                                        <div class="recommendation-info">
+                                            <p>Image ${index + 1}</p><br>
+                                            <p>Similarity: ${((1 - rec.distance) * 100).toFixed(2)}%</p>
+                                        </div>
+                                    </div>
+                                `;
+                            });
+                            
+                            resultsWrapper.innerHTML = html;
+                            swiper.update();
+                            swiper.slideTo(0);
+                            updateProcessingStatus('complete');
+                        }, 1000);
+                    } else {
+                        alert('Error processing image');
+                        submitBtn.disabled = false;
+                    }
+                };
+
+                xhr.onerror = function() {
+                    alert('Network error occurred');
+                    submitBtn.disabled = false;
+                };
+
+                xhr.open('POST', '/upload', true);
+                xhr.send(formData);
+            } catch (error) {
+                alert('Error: ' + error.message);
+                submitBtn.disabled = false;
+            }
+        };
+
+        function handleFile(file) {
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    queryImage.src = e.target.result;
+                    queryImage.style.display = 'block';
+                    
+                    // Tự động set file vào form
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(file);
+                    fileInput.files = dataTransfer.files;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                alert('Please upload an image file');
+            }
+        }
+    </script>
+</body>
+</html>
